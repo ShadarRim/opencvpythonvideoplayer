@@ -1,4 +1,4 @@
-# opencvpythonvideoplayer
+# PySide GUI video player with opencv video stream
 Code for create video player with PySide GUI (PyQt, Qt for Python) from OpenCV video stream 
 
 Using libs:
