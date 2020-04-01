@@ -21,7 +21,6 @@ class VideoPlayer(QtWidgets.QWidget):
         self.fps = fps
 
         self.frame_label = QtWidgets.QLabel()
-        self.file_dialog = QtWidgets.QFileDialog()
         self.quit_button = QtWidgets.QPushButton("Quit")
         self.play_pause_button = QtWidgets.QPushButton("Pause")
         self.camera_video_button = QtWidgets.QPushButton("Switch to video")
@@ -57,23 +56,20 @@ class VideoPlayer(QtWidgets.QWidget):
 
     def camera_video(self):
         if not self.video:
-            self.setup_video(30, "C://testvid.mp4")
-            self.camera_video_button.setText("Switch to camera")
+            path = QtWidgets.QFileDialog.getOpenFileName(filter="Videos (*.mp4)")
+            if len(path[0]) > 0:
+                self.video_capture.open(path[0])
+                self.camera_video_button.setText("Switch to camera")
+                self.video = not self.video
         else:
             self.camera_video_button.setText("Switch to video")
             self.video_capture.release()
-        self.video = not self.video
+            self.video = not self.video
+
 
     def setup_camera(self, fps):
         self.camera_capture.set(3, self.video_size.width())
         self.camera_capture.set(4, self.video_size.height())
-
-        self.frame_timer.timeout.connect(self.display_video_stream)
-        self.frame_timer.start(int(1000 // fps))
-
-    def setup_video(self, fps, path):
-        if not self.video_capture.isOpened():
-            self.video_capture.open(path)
 
         self.frame_timer.timeout.connect(self.display_video_stream)
         self.frame_timer.start(int(1000 // fps))
