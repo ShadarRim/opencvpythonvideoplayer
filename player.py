@@ -7,25 +7,30 @@ import qimage2ndarray
 class VideoPlayer(QtWidgets.QWidget):
 
     pause = False
+    video = False
 
     def __init__(self, width=640, height=480, fps=30):
         QtWidgets.QWidget.__init__(self)
 
         self.video_size = QtCore.QSize(width, height)
         self.camera_capture = cv2.VideoCapture(cv2.CAP_DSHOW)
+        self.video_capture = cv2.VideoCapture()
         self.frame_timer = QtCore.QTimer()
 
         self.setup_camera(fps)
+        self.fps = fps
 
         self.frame_label = QtWidgets.QLabel()
         self.file_dialog = QtWidgets.QFileDialog()
         self.quit_button = QtWidgets.QPushButton("Quit")
         self.play_pause_button = QtWidgets.QPushButton("Pause")
+        self.camera_video_button = QtWidgets.QPushButton("Switch to video")
         self.main_layout = QtWidgets.QGridLayout()
 
         self.setup_ui()
 
         QtCore.QObject.connect(self.play_pause_button, QtCore.SIGNAL("clicked()"), self.play_pause)
+        QtCore.QObject.connect(self.camera_video_button, QtCore.SIGNAL("clicked()"), self.camera_video)
 
     def setup_ui(self):
 
@@ -35,18 +40,29 @@ class VideoPlayer(QtWidgets.QWidget):
         self.main_layout.addWidget(self.frame_label, 0, 0, 1, 2)
         #self.main_layout.addWidget(self.file_dialog)
         self.main_layout.addWidget(self.play_pause_button, 1, 1, 1, 1)
+        self.main_layout.addWidget(self.camera_video_button,1, 0, 1, 1)
         self.main_layout.addWidget(self.quit_button,2,0,1,2)
 
         self.setLayout(self.main_layout)
 
     def play_pause(self):
         if not self.pause:
-            print("stop")
+            self.frame_timer.stop()
             self.play_pause_button.setText("Play")
         else:
-            print("start")
+            self.frame_timer.start(int(1000 // self.fps))
             self.play_pause_button.setText("Pause")
+
         self.pause = not self.pause
+
+    def camera_video(self):
+        if not self.video:
+            self.setup_video(30, "C://testvid.mp4")
+            self.camera_video_button.setText("Switch to camera")
+        else:
+            self.camera_video_button.setText("Switch to video")
+            self.video_capture.release()
+        self.video = not self.video
 
     def setup_camera(self, fps):
         self.camera_capture.set(3, self.video_size.width())
@@ -55,18 +71,30 @@ class VideoPlayer(QtWidgets.QWidget):
         self.frame_timer.timeout.connect(self.display_video_stream)
         self.frame_timer.start(int(1000 // fps))
 
+    def setup_video(self, fps, path):
+        if not self.video_capture.isOpened():
+            self.video_capture.open(path)
+
+        self.frame_timer.timeout.connect(self.display_video_stream)
+        self.frame_timer.start(int(1000 // fps))
+
     def display_video_stream(self):
-        if not self.pause:
+
+        if not self.video:
             ret, frame = self.camera_capture.read()
+        else:
+            ret, frame = self.video_capture.read()
 
-            if not ret:
-                return False
+        if not ret:
+            return False
 
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        if not self.video:
             frame = cv2.flip(frame, 1)
 
-            image = qimage2ndarray.array2qimage(frame)
-            self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
+        image = qimage2ndarray.array2qimage(frame)
+        self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def close_win(self):
         self.camera_capture.release()
