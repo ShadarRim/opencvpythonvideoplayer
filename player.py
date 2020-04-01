@@ -6,6 +6,8 @@ import qimage2ndarray
 
 class VideoPlayer(QtWidgets.QWidget):
 
+    pause = False
+
     def __init__(self, width=640, height=480, fps=30):
         QtWidgets.QWidget.__init__(self)
 
@@ -16,10 +18,14 @@ class VideoPlayer(QtWidgets.QWidget):
         self.setup_camera(fps)
 
         self.frame_label = QtWidgets.QLabel()
+        self.file_dialog = QtWidgets.QFileDialog()
         self.quit_button = QtWidgets.QPushButton("Quit")
+        self.play_pause_button = QtWidgets.QPushButton("Pause")
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.setup_ui()
+
+        QtCore.QObject.connect(self.play_pause_button, QtCore.SIGNAL("clicked()"), self.play_pause)
 
     def setup_ui(self):
 
@@ -27,9 +33,20 @@ class VideoPlayer(QtWidgets.QWidget):
         self.quit_button.clicked.connect(self.close_win)
 
         self.main_layout.addWidget(self.frame_label)
+        #self.main_layout.addWidget(self.file_dialog)
+        self.main_layout.addWidget(self.play_pause_button)
         self.main_layout.addWidget(self.quit_button)
 
         self.setLayout(self.main_layout)
+
+    def play_pause(self):
+        if not self.pause:
+            print("stop")
+            self.play_pause_button.setText("Play")
+        else:
+            print("start")
+            self.play_pause_button.setText("Pause")
+        self.pause = not self.pause
 
     def setup_camera(self, fps):
         self.camera_capture.set(3, self.video_size.width())
@@ -39,16 +56,17 @@ class VideoPlayer(QtWidgets.QWidget):
         self.frame_timer.start(int(1000 // fps))
 
     def display_video_stream(self):
-        ret, frame = self.camera_capture.read()
+        if not self.pause:
+            ret, frame = self.camera_capture.read()
 
-        if not ret:
-            return False
+            if not ret:
+                return False
 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = cv2.flip(frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.flip(frame, 1)
 
-        image = qimage2ndarray.array2qimage(frame)
-        self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
+            image = qimage2ndarray.array2qimage(frame)
+            self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def close_win(self):
         self.camera_capture.release()
