@@ -21,7 +21,7 @@ class VideoPlayer(QtWidgets.QWidget):
         self.file_dialog = QtWidgets.QFileDialog()
         self.quit_button = QtWidgets.QPushButton("Quit")
         self.play_pause_button = QtWidgets.QPushButton("Pause")
-        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout = QtWidgets.QGridLayout()
 
         self.setup_ui()
 
@@ -32,10 +32,10 @@ class VideoPlayer(QtWidgets.QWidget):
         self.frame_label.setFixedSize(self.video_size)
         self.quit_button.clicked.connect(self.close_win)
 
-        self.main_layout.addWidget(self.frame_label)
+        self.main_layout.addWidget(self.frame_label, 0, 0, 1, 2)
         #self.main_layout.addWidget(self.file_dialog)
-        self.main_layout.addWidget(self.play_pause_button)
-        self.main_layout.addWidget(self.quit_button)
+        self.main_layout.addWidget(self.play_pause_button, 1, 1, 1, 1)
+        self.main_layout.addWidget(self.quit_button,2,0,1,2)
 
         self.setLayout(self.main_layout)
 
