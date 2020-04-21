@@ -37,7 +37,6 @@ class VideoPlayer(QtWidgets.QWidget):
         self.quit_button.clicked.connect(self.close_win)
 
         self.main_layout.addWidget(self.frame_label, 0, 0, 1, 2)
-        #self.main_layout.addWidget(self.file_dialog)
         self.main_layout.addWidget(self.play_pause_button, 1, 1, 1, 1)
         self.main_layout.addWidget(self.camera_video_button,1, 0, 1, 1)
         self.main_layout.addWidget(self.quit_button,2,0,1,2)
@@ -88,12 +87,15 @@ class VideoPlayer(QtWidgets.QWidget):
 
         if not self.video:
             frame = cv2.flip(frame, 1)
+        else:
+            frame = cv2.resize(frame, (self.video_size.width(), self.video_size.height()), interpolation=cv2.INTER_AREA)
 
         image = qimage2ndarray.array2qimage(frame)
         self.frame_label.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def close_win(self):
         self.camera_capture.release()
+        self.video_capture.release()
         cv2.destroyAllWindows()
         self.close()
 
